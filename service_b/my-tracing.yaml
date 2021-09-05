@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: service-b
+  name: service-b
+spec:
+  selector:
+    matchLabels:
+      app: service-b
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: service-b
+    spec:
+      containers:
+      - image: uhub.service.ucloud.cn/luzejia/tracing-b:v0.0.12
+        imagePullPolicy: Always
+        name: service-b
+        ports:
+        - containerPort: 8082
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-b
+  labels:
+    app: service-b
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 8082
+    name: http
+  selector:
+    app: service-b
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: service-b
+  annotations:
+    kubernetes.io/ingress.class: "istio"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /service-b
+        backend:
+          serviceName: service-b
+          servicePort: 80
+

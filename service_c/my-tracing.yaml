@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: service-c
+  name: service-c
+spec:
+  selector:
+    matchLabels:
+      app: service-c
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: service-c
+    spec:
+      containers:
+      - image: uhub.service.ucloud.cn/luzejia/tracing-c:v0.0.12
+        imagePullPolicy: Always
+        name: service-c
+        ports:
+        - containerPort: 8083
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-c
+  labels:
+    app: service-c
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 8083
+    name: http
+  selector:
+    app: service-c
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: service-c
+  annotations:
+    kubernetes.io/ingress.class: "istio"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /service-c
+        backend:
+          serviceName: service-c
+          servicePort: 80
+

@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: service-d
+  name: service-d
+spec:
+  selector:
+    matchLabels:
+      app: service-d
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: service-d
+    spec:
+      containers:
+      - image: uhub.service.ucloud.cn/luzejia/tracing-d:v0.0.9
+        imagePullPolicy: Always
+        name: service-d
+        ports:
+        - containerPort: 8084
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-d
+  labels:
+    app: service-d
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 8084
+    name: http
+  selector:
+    app: service-d
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: service-d
+  annotations:
+    kubernetes.io/ingress.class: "istio"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /service-d
+        backend:
+          serviceName: service-d
+          servicePort: 80
+
